@@ -1,0 +1,73 @@
+/** Notes:
+  * Please replace 0xYourFundAddressHere with the actual address of your fund.
+  * In this updated version, when a token is transferred, only 70% of the amount goes to the intended recipient, and 30% is automatically sent to the fundAddress. Both transfers are logged as separate Transfer events.
+  * The transferFrom function, used for transferring allowed tokens, also works the same way, deducting the full amount from the sender, but splitting the transfer between the recipient and the fund.
+  */
+
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity >=0.8.2 <0.9.0;
+
+/**
+ * @title Token
+ * @dev An implementation of ERC 20
+ * @custom:dev-run-script ./scripts/deploy_with_ethers.ts
+ */
+contract Token {
+    string public name = "Indulgences";
+    string public symbol = "IND";
+    uint8 public decimals = 18;
+    uint256 public totalSupply = 100;
+    address public fundAddress = 0xYourFundAddressHere; // replace with the actual address
+
+    mapping(address => uint256) balances;
+    mapping(address => mapping(address => uint256)) allowances;
+
+    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+
+    function balanceOf(address _owner) public view returns (uint256 balance) {
+        return balances[_owner];
+    }
+
+    function mint(address _owner) public {
+        balances[_owner] += 10;
+    }
+
+    function transfer(address _to, uint256 _value) public returns (bool success) {
+        require(balances[msg.sender] >= _value, "sorry you are poor");
+        uint256 fundValue = _value * 30 / 100; // calculate 30% for the fund
+        uint256 actualValue = _value - fundValue; // calculate 70% for the recipient
+        balances[msg.sender] -= _value;
+        balances[_to] += actualValue;
+        balances[fundAddress] += fundValue;
+        emit Transfer(msg.sender, _to, actualValue);
+        emit Transfer(msg.sender, fundAddress, fundValue);
+        return true;
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public returns(bool success){
+        require(balances[_from] >= _value, "sorry you are poor");
+        require(allowances[_from][msg.sender] >= _value || _from == msg.sender, "sorry");
+        uint256 fundValue = _value * 30 / 100; // calculate 30% for the fund
+        uint256 actualValue = _value - fundValue; // calculate 70% for the recipient
+        allowances[_from][msg.sender] -= _value;
+        balances[_from] -= _value;
+        balances[_to] += actualValue;
+        balances[fundAddress] += fundValue;
+        emit Transfer(_from, _to, actualValue);
+        emit Transfer(_from, fundAddress, fundValue);
+        return true;
+    }
+
+    function approve(address _spender, uint256 _value) public returns (bool success){
+       allowances[msg.sender][_spender] += _value;
+       emit Approval(msg.sender, _spender, _value);
+       return true;
+    }
+
+    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
+        return allowances[_owner][_spender];
+    }
+
+}
