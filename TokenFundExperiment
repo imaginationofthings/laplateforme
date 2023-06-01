@@ -1,3 +1,17 @@
+/**
+* 
+* In this contract, for every transaction, 30% of the tokens are actually sent to an internal fund. 
+* And after every 50th transaction, a new user randomly might get a reward of 20% from that fund.
+*
+* In this version, the transfer function calculates the fund portion, decreases the sender's balance by the full amount, 
+* increases the recipient's balance by the remainder, and adds the fund portion to the contract's internal fund. 
+* If it's the recipient's first time receiving tokens, their address is added to the participants array. 
+* After the transfer, the transaction counter increments. If it has reached 50, a user is rewarded, and the counter resets.
+*
+* The rewardUser function calculates the reward value (20% of the fund), subtracts it from the fund, 
+* pseudo-randomly selects a participant to reward, increases their balance by the reward value, and emits a Reward event.
+*/
+
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity >=0.8.2 <0.9.0;
