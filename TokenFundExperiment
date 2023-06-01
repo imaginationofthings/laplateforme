@@ -1,7 +1,7 @@
 /**
 * 
 * In this contract, for every transaction, 30% of the tokens are actually sent to an internal fund. 
-* And after every 50th transaction, a new user randomly might get a reward of 20% from that fund.
+* And after every set of 50 transactions, a new user randomly might get a reward of 20% from that fund.
 *
 * In this version, the transfer function calculates the fund portion, decreases the sender's balance by the full amount, 
 * increases the recipient's balance by the remainder, and adds the fund portion to the contract's internal fund. 
