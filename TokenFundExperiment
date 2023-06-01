@@ -67,7 +67,6 @@ contract Token {
         emit Reward(recipient, rewardValue);
     }
 
-  // ... continue from the previous part
 
     function transferFrom(address _from, address _to, uint256 _value) public returns(bool success){
         require(balances[_from] >= _value, "Insufficient balance");
