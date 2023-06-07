@@ -13,23 +13,18 @@
 */
 
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity >=0.8.2 <0.9.0;
 
-/**
- * @title Token
- * @dev An implementation of ERC 20
- * @custom:dev-run-script ./scripts/deploy_with_ethers.ts
- */
-contract Token {
+contract Fund {
     string public name = "Indulgences";
     string public symbol = "IND";
     uint8 public decimals = 18;
     uint256 public totalSupply = 100;
-    uint256 public fund = 0; // Internal fund
-    uint256 public transactionCount = 0; // Transaction counter
+    uint256 public fund = 0;
+    uint256 public transactionCount = 0;
 
-    address[] public participants; // Array to hold all participant addresses
+    address[] public participants;
+    mapping(address => bool) public isParticipant;
 
     mapping(address => uint256) balances;
     mapping(address => mapping(address => uint256)) allowances;
@@ -44,24 +39,27 @@ contract Token {
 
     function mint(address _owner) public {
         balances[_owner] += 10;
+        if(!isParticipant[_owner]){
+            participants.push(_owner);
+            isParticipant[_owner] = true;
+        }
     }
 
     function transfer(address _to, uint256 _value) public returns (bool success) {
         require(balances[msg.sender] >= _value, "sorry you are poor");
-        uint256 fundValue = _value * 30 / 100; // calculate 30% for the fund
-        uint256 actualValue = _value - fundValue; // calculate 70% for the recipient
+        uint256 fundValue = _value * 30 / 100;
+        uint256 actualValue = _value - fundValue;
         balances[msg.sender] -= _value;
         balances[_to] += actualValue;
-        fund += fundValue; // add to the fund
+        fund += fundValue;
         emit Transfer(msg.sender, _to, actualValue);
 
-        // Adding to participants array
-        if (balances[_to] == actualValue){
+        if(!isParticipant[_to]){
             participants.push(_to);
+            isParticipant[_to] = true;
         }
 
         transactionCount++;
-        // Check if it's time to reward a user
         if(transactionCount >= 50) {
             rewardUser();
             transactionCount = 0;
@@ -72,14 +70,15 @@ contract Token {
 
     function rewardUser() internal {
         require(participants.length > 0, "No participants to reward");
-        uint256 rewardValue = fund * 20 / 100; // calculate 20% of the fund
-        fund -= rewardValue; // subtract from the fund
-        // Pseudo-randomly select a participant to reward
+        uint256 rewardValue = fund * 20 / 100;
+        fund -= rewardValue;
         uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1)))) % participants.length;
         address recipient = participants[randomIndex];
         balances[recipient] += rewardValue;
         emit Reward(recipient, rewardValue);
-}
+    }
+
+    // ... continue from the previous part
 
     function transferFrom(address _from, address _to, uint256 _value) public returns(bool success){
         require(balances[_from] >= _value, "Insufficient balance");
@@ -117,3 +116,4 @@ contract Token {
         return allowances[_owner][_spender];
     }
 }
+
