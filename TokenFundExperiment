@@ -75,12 +75,11 @@ contract Token {
         uint256 rewardValue = fund * 20 / 100; // calculate 20% of the fund
         fund -= rewardValue; // subtract from the fund
         // Pseudo-randomly select a participant to reward
-        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % participants.length;
+        uint256 randomIndex = uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1)))) % participants.length;
         address recipient = participants[randomIndex];
         balances[recipient] += rewardValue;
         emit Reward(recipient, rewardValue);
-    }
-
+}
 
     function transferFrom(address _from, address _to, uint256 _value) public returns(bool success){
         require(balances[_from] >= _value, "Insufficient balance");
